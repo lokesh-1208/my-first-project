@@ -3,16 +3,27 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const BASE_URL = process.env.BASE_URL || 'https://www.saucedemo.com/';
+const DEFAULT_BASE_URL = process.env.BASE_URL || 'https://www.saucedemo.com/';
 
-export async function loginAsStandardUser(page) {
-  await page.goto(BASE_URL);
+export async function login(page, {
+  baseUrl = process.env.BASE_URL,
+  username = process.env.SAUCE_USERNAME,
+  password = process.env.SAUCE_PASSWORD
+} = {}) {
+  await page.goto(baseUrl);
 
-  await page.locator('[data-test="username"]').fill(process.env.SAUCE_USERNAME || 'standard_user');
-  await page.locator('[data-test="password"]').fill(process.env.SAUCE_PASSWORD || 'secret_sauce');
+  const userInput = page.locator('[data-test="username"]');
+  const passInput = page.locator('[data-test="password"]');
+
+  await clearAndFill(userInput, username);
+  await clearAndFill(passInput, password);
+
   await page.locator('[data-test="login-button"]').click();
+}
 
-  await page.waitForURL(/.*inventory\.html/);
+async function clearAndFill(locator, value) {
+  await locator.clear();
+  await locator.fill(value);
 }
 
 export async function logoutUser(page) {
@@ -21,7 +32,7 @@ export async function logoutUser(page) {
 }
 
 export async function loginScreenlocators(page) {
-  await page.goto(BASE_URL);
+  await page.goto(DEFAULT_BASE_URL);
   await expect(page.getByText('Swag Labs')).toBeVisible();
   await expect(page.getByText('Username')).toBeVisible();
   await expect(page.getByText('Password')).toBeVisible();
