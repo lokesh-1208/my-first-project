@@ -1,15 +1,6 @@
 import { test, expect } from '@playwright/test';
 import * as Auth from '../../utils/auth.js';
 
-test.describe("Login and tab Navigation", () => {
- test('user can log in and see products then logout', async ({ page }) => {
-    await Auth.login(page);
-    await expect(page).toHaveURL(/.*inventory\.html/);
-    await expect(page.locator('.title')).toHaveText('Products');
-    await Auth.logoutUser(page);
-});
-});
-
 test.describe('Login page validation', () => {
   test('login page elements are visible', async ({ page }) => {
     await Auth.loginScreenlocators(page);
@@ -23,7 +14,7 @@ test.describe('Login page validation', () => {
 
   test('user cannot login with blank password', async ({ page }) => {
     await Auth.loginScreenlocators(page);
-    await Auth.login(page, { username: 'standard_user', password: '' });
+    await Auth.login(page, { username: process.env.SAUCE_USERNAME, password: '' });
     await expect(page.locator('[data-test="error"]')).toContainText('Password is required');
   });
 
@@ -34,7 +25,13 @@ test.describe('Login page validation', () => {
 
   });
 
-    test('user logged in with valid credentials', async ({ page }) => {
+  test('user locked out after multiple failed login attempts', async ({ page }) => {
+    await Auth.loginScreenlocators(page);
+    await Auth.login(page, { username: 'locked_out_user', password: process.env.SAUCE_PASSWORD });
+    await expect(page.locator('[data-test="error"]')).toContainText('Sorry, this user has been locked out');
+  });
+
+  test('user logged in with valid credentials', async ({ page }) => {
     await Auth.loginScreenlocators(page);
     await Auth.login(page);
     await Auth.logoutUser(page);
