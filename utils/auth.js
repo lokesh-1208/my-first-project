@@ -78,3 +78,12 @@ export async function leftMenuLocators(page) {
   await expect(page.locator('[data-test="reset-sidebar-link"]')).toContainText('Reset App State');
   await page.getByRole('button', { name: 'Close Menu' }).click();
 }  
+
+export async function addremoveItemsFromCart(page) {
+  await expect(page.locator('[data-test="add-to-cart-sauce-labs-backpack"]')).toContainText('Add to cart');
+  await page.locator('[data-test="add-to-cart-sauce-labs-backpack"]').click();
+  await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
+  await expect(page.locator('[data-test="remove-sauce-labs-backpack"]')).toContainText('Remove');
+  await page.locator('[data-test="remove-sauce-labs-backpack"]').click();
+  await expect(page.locator('.shopping_cart_badge')).not.toBeVisible();
+}

@@ -16,5 +16,11 @@ test.describe("Login and navigate to inventory", () => {
     await Auth.inventoryScreenlocators(page);
     await Auth.logoutUser(page);
 });
+
+  test('user add and remove items from cart', async ({ page }) => {
+    await Auth.login(page);
+    await Auth.addremoveItemsFromCart(page);
+    await Auth.logoutUser(page);
+});
 });
 
