@@ -108,3 +108,13 @@ export async function expectCartCount(page, count) {
   }
   await expect(cartBadge).toHaveText(String(count));
 }
+
+export async function expectInventoryProductPrices(page, products) {
+  for (const product of products) {
+    const inventoryItem = page.locator('.inventory_item').filter({
+      has: page.locator(`[data-test="add-to-cart-${product.id}"]`),
+    });
+    await expect(inventoryItem.locator('[data-test="inventory-item-price"]'))
+      .toHaveText(product.price);
+  }
+}

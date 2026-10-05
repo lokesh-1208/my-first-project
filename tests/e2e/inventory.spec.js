@@ -1,14 +1,15 @@
 import { test, expect } from '@playwright/test';
 import * as Auth from '../../utils/auth.js';
 
-const productIds = [
-  'sauce-labs-backpack',
-  'sauce-labs-bike-light',
-  'sauce-labs-bolt-t-shirt',
-  'sauce-labs-fleece-jacket',
-  'sauce-labs-onesie',
-  'test.allthethings()-t-shirt-(red)',
+const products = [
+  { id: 'sauce-labs-backpack', price: '$29.99' },
+  { id: 'sauce-labs-bike-light', price: '$9.99' },
+  { id: 'sauce-labs-bolt-t-shirt', price: '$15.99' },
+  { id: 'sauce-labs-fleece-jacket', price: '$49.99' },
+  { id: 'sauce-labs-onesie', price: '$7.99' },
+  { id: 'test.allthethings()-t-shirt-(red)', price: '$15.99' },
 ];
+const productIds = products.map((product) => product.id);
 
 function pickRandomProducts(products, count) {
   const shuffledProducts = [...products];
@@ -25,7 +26,7 @@ function pickRandomProducts(products, count) {
 }
 
 
-test.describe("Login and navigate to inventory", () => {
+test.describe("Navigate to Inventory + Cart behavior", () => {
  test('user can log in and navigate to left menu then logout', async ({ page }) => {
     await Auth.login(page);
     await expect(page).toHaveURL(/.*inventory\.html/);
@@ -40,9 +41,18 @@ test.describe("Login and navigate to inventory", () => {
     await Auth.logoutUser(page);
 });
 
-  test('add and remove two products from cart', async ({ page }) => {
+  test('inventory displays the expected price for each product', async ({ page }) => {
     await Auth.login(page);
-    const selectedProductIds = pickRandomProducts(productIds, 2);
+    await Auth.expectInventoryProductPrices(page, products);
+
+    for (const product of products) {
+      console.log(`Verified inventory price: ${product.id} = ${product.price}`);
+    }
+  });
+
+  test('add and remove three products from cart', async ({ page }) => {
+    await Auth.login(page);
+    const selectedProductIds = pickRandomProducts(productIds, 3);
     console.log(`Selected products: ${selectedProductIds.join(', ')}`);
 
     for (const productId of selectedProductIds) {
