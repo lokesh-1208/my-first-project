@@ -87,3 +87,24 @@ export async function addremoveItemsFromCart(page) {
   await page.locator('[data-test="remove-sauce-labs-backpack"]').click();
   await expect(page.locator('.shopping_cart_badge')).not.toBeVisible();
 }
+
+export async function addItemToCart(page, productId) {
+  const addButton = page.locator(`[data-test="add-to-cart-${productId}"]`);
+  await expect(addButton).toHaveText('Add to cart');
+  await addButton.click();
+}
+
+export async function removeItemFromCart(page, productId) {
+  const removeButton = page.locator(`[data-test="remove-${productId}"]`);
+  await expect(removeButton).toHaveText('Remove');
+  await removeButton.click();
+}
+
+export async function expectCartCount(page, count) {
+  const cartBadge = page.locator('.shopping_cart_badge');
+  if (count === 0) {
+    await expect(cartBadge).not.toBeVisible();
+    return;
+  }
+  await expect(cartBadge).toHaveText(String(count));
+}
