@@ -1,30 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as Auth from '../../utils/auth.js';
-
-const products = [
-  { id: 'sauce-labs-backpack', price: '$29.99' },
-  { id: 'sauce-labs-bike-light', price: '$9.99' },
-  { id: 'sauce-labs-bolt-t-shirt', price: '$15.99' },
-  { id: 'sauce-labs-fleece-jacket', price: '$49.99' },
-  { id: 'sauce-labs-onesie', price: '$7.99' },
-  { id: 'test.allthethings()-t-shirt-(red)', price: '$15.99' },
-];
-const productIds = products.map((product) => product.id);
-
-function pickRandomProducts(products, count) {
-  const shuffledProducts = [...products];
-
-  for (let index = shuffledProducts.length - 1; index > 0; index--) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
-    [shuffledProducts[index], shuffledProducts[randomIndex]] = [
-      shuffledProducts[randomIndex],
-      shuffledProducts[index],
-    ];
-  }
-
-  return shuffledProducts.slice(0, count);
-}
-
+import { products, productIds } from '../../test-data/products.js';
+import { pickRandomItems } from '../../utils/product-selection.js';
 
 test.describe("Navigate to Inventory + Cart behavior", () => {
  test('user can log in and navigate to left menu then logout', async ({ page }) => {
@@ -52,7 +29,7 @@ test.describe("Navigate to Inventory + Cart behavior", () => {
 
   test('add and remove three products from cart', async ({ page }) => {
     await Auth.login(page);
-    const selectedProductIds = pickRandomProducts(productIds, 3);
+    const selectedProductIds = pickRandomItems(productIds, 3);
     console.log(`Selected products: ${selectedProductIds.join(', ')}`);
 
     for (const productId of selectedProductIds) {
@@ -86,7 +63,7 @@ test.describe("Navigate to Inventory + Cart behavior", () => {
 
   test('add two products and remove one from cart', async ({ page }) => {
     await Auth.login(page);
-    const selectedProductIds = pickRandomProducts(productIds, 2);
+    const selectedProductIds = pickRandomItems(productIds, 2);
     console.log(`Selected products: ${selectedProductIds.join(', ')}`);
 
     for (const productId of selectedProductIds) {
