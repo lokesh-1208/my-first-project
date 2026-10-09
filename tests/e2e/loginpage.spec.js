@@ -1,39 +1,49 @@
-import { test, expect } from '@playwright/test';
-import * as Auth from '../../utils/auth.js';
+import { test } from '@playwright/test';
+import { InventoryPage } from '../../pages/inventory.page.js';
+import { LoginPage } from '../../pages/login.page.js';
+
+async function openLoginPage(page) {
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.expectVisible();
+  return loginPage;
+}
 
 test.describe('Login page validation', () => {
   test('login page elements are visible', async ({ page }) => {
-    await Auth.loginScreenlocators(page);
+    await openLoginPage(page);
   });
 
   test('user cannot login with blank username', async ({ page }) => {
-    await Auth.loginScreenlocators(page);
-    await Auth.login(page, { username: '', password: 'Password123' });
-    await expect(page.locator('[data-test="error"]')).toContainText('Username is required');
+    const loginPage = await openLoginPage(page);
+    await loginPage.login({ username: '', password: 'Password123' });
+    await loginPage.expectError('Username is required');
   });
 
   test('user cannot login with blank password', async ({ page }) => {
-    await Auth.loginScreenlocators(page);
-    await Auth.login(page, { username: process.env.SAUCE_USERNAME, password: '' });
-    await expect(page.locator('[data-test="error"]')).toContainText('Password is required');
+    const loginPage = await openLoginPage(page);
+    await loginPage.login({ username: process.env.SAUCE_USERNAME, password: '' });
+    await loginPage.expectError('Password is required');
   });
 
   test('user cannot log in with invalid credentials', async ({ page }) => {
-    await Auth.loginScreenlocators(page);
-    await Auth.login(page, { username: 'invalid_user', password: 'invalid_pass' });   
-    await expect(page.locator('[data-test="error"]')).toContainText('Username and password do not match any user in this service');
-
+    const loginPage = await openLoginPage(page);
+    await loginPage.login({ username: 'invalid_user', password: 'invalid_pass' });
+    await loginPage.expectError('Username and password do not match any user in this service');
   });
 
   test('user locked out after multiple failed login attempts', async ({ page }) => {
-    await Auth.loginScreenlocators(page);
-    await Auth.login(page, { username: 'locked_out_user', password: process.env.SAUCE_PASSWORD });
-    await expect(page.locator('[data-test="error"]')).toContainText('Sorry, this user has been locked out');
+    const loginPage = await openLoginPage(page);
+    await loginPage.login({ username: 'locked_out_user', password: process.env.SAUCE_PASSWORD });
+    await loginPage.expectError('Sorry, this user has been locked out');
   });
 
   test('user logged in with valid credentials', async ({ page }) => {
-    await Auth.loginScreenlocators(page);
-    await Auth.login(page);
-    await Auth.logoutUser(page);
-});
+    const loginPage = await openLoginPage(page);
+    await loginPage.login();
+
+    const inventoryPage = new InventoryPage(page);
+    await inventoryPage.expectLoaded();
+    await inventoryPage.logout();
+  });
 });
