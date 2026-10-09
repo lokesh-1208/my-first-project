@@ -1,86 +1,78 @@
-import { test, expect } from '@playwright/test';
-import * as Auth from '../../utils/auth.js';
+import { test } from '@playwright/test';
+import { InventoryPage } from '../../pages/inventory.page.js';
+import { LoginPage } from '../../pages/login.page.js';
 import { products, productIds } from '../../test-data/products.js';
-import { pickRandomItems } from '../../utils/product-selection.js';
+import { pickRandomItems } from '../../test-data/product-selection.js';
 
-test.describe("Navigate to Inventory + Cart behavior", () => {
- test('user can log in and navigate to left menu then logout', async ({ page }) => {
-    await Auth.login(page);
-    await expect(page).toHaveURL(/.*inventory\.html/);
-    await expect(page.locator('.title')).toHaveText('Products');
-    await Auth.leftMenuLocators(page);
-    await Auth.logoutUser(page);
-});
+async function openInventory(page) {
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.login();
+  return new InventoryPage(page);
+}
+
+test.describe('Inventory and cart behavior', () => {
+  test('user can log in, navigate the left menu, and log out', async ({ page }) => {
+    const inventoryPage = await openInventory(page);
+    await inventoryPage.expectLoaded();
+    await inventoryPage.expectMenuOptions();
+    await inventoryPage.logout();
+  });
 
   test('Inventory page elements are visible', async ({ page }) => {
-    await Auth.login(page);
-    await Auth.inventoryScreenlocators(page);
-    await Auth.logoutUser(page);
-});
+    const inventoryPage = await openInventory(page);
+    await inventoryPage.expectProductCatalog();
+    await inventoryPage.logout();
+  });
 
   test('inventory displays the expected price for each product', async ({ page }) => {
-    await Auth.login(page);
-    await Auth.expectInventoryProductPrices(page, products);
-
-    for (const product of products) {
-      console.log(`Verified inventory price: ${product.id} = ${product.price}`);
-    }
+    const inventoryPage = await openInventory(page);
+    await inventoryPage.expectProductPrices(products);
   });
 
   test('add and remove three products from cart', async ({ page }) => {
-    await Auth.login(page);
+    const inventoryPage = await openInventory(page);
     const selectedProductIds = pickRandomItems(productIds, 3);
-    console.log(`Selected products: ${selectedProductIds.join(', ')}`);
 
     for (const productId of selectedProductIds) {
-      await Auth.addItemToCart(page, productId);
-      console.log(`Added product: ${productId}`);
+      await inventoryPage.addItemToCart(productId);
     }
-    await Auth.expectCartCount(page, selectedProductIds.length);
+    await inventoryPage.expectCartCount(selectedProductIds.length);
 
     for (const [index, productId] of selectedProductIds.entries()) {
-      await Auth.removeItemFromCart(page, productId);
-      console.log(`Removed product: ${productId}`);
-      await Auth.expectCartCount(page, selectedProductIds.length - index - 1);
+      await inventoryPage.removeItemFromCart(productId);
+      await inventoryPage.expectCartCount(selectedProductIds.length - index - 1);
     }
   });
 
   test('add and remove all six products from cart', async ({ page }) => {
-    await Auth.login(page);
+    const inventoryPage = await openInventory(page);
 
     for (const productId of productIds) {
-      await Auth.addItemToCart(page, productId);
-      console.log(`Added product: ${productId}`);
+      await inventoryPage.addItemToCart(productId);
     }
-    await Auth.expectCartCount(page, productIds.length);
+    await inventoryPage.expectCartCount(productIds.length);
 
     for (const [index, productId] of productIds.entries()) {
-      await Auth.removeItemFromCart(page, productId);
-      console.log(`Removed product: ${productId}`);
-      await Auth.expectCartCount(page, productIds.length - index - 1);
+      await inventoryPage.removeItemFromCart(productId);
+      await inventoryPage.expectCartCount(productIds.length - index - 1);
     }
   });
 
   test('add two products and remove one from cart', async ({ page }) => {
-    await Auth.login(page);
+    const inventoryPage = await openInventory(page);
     const selectedProductIds = pickRandomItems(productIds, 2);
-    console.log(`Selected products: ${selectedProductIds.join(', ')}`);
 
     for (const productId of selectedProductIds) {
-      await Auth.addItemToCart(page, productId);
-      console.log(`Added product: ${productId}`);
+      await inventoryPage.addItemToCart(productId);
     }
-    await Auth.expectCartCount(page, selectedProductIds.length);
+    await inventoryPage.expectCartCount(selectedProductIds.length);
 
-    const productToRemove = selectedProductIds[0];
-    await Auth.removeItemFromCart(page, productToRemove);
-    console.log(`Removed product: ${productToRemove}`);
-    await Auth.expectCartCount(page, selectedProductIds.length - 1);
+    await inventoryPage.removeItemFromCart(selectedProductIds[0]);
+    await inventoryPage.expectCartCount(selectedProductIds.length - 1);
 
-    const remainingProduct = selectedProductIds[1];
-    await Auth.removeItemFromCart(page, remainingProduct);
-    console.log(`Removed product for cleanup: ${remainingProduct}`);
-    await Auth.expectCartCount(page, 0);
+    await inventoryPage.removeItemFromCart(selectedProductIds[1]);
+    await inventoryPage.expectCartCount(0);
   });
 });
 
